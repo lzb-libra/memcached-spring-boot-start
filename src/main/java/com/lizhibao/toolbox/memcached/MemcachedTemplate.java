@@ -6,6 +6,7 @@ import com.schooner.MemCached.MemcachedItem;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.lang.reflect.Method;
 import java.util.*;
 
 /**
@@ -805,7 +806,7 @@ public class MemcachedTemplate {
         for (Map.Entry<String, Map<String, String>> entry : statsInfo.entrySet()) {
             MemcachedStats stats = new MemcachedStats(entry.getKey());
             for (Map.Entry<String, String> item : entry.getValue().entrySet()) {
-                MemcachedUtils.setFieldValue(item.getKey(), item.getValue(), stats);
+                setFieldValue(item.getKey(), item.getValue(), stats);
             }
             results.add(stats);
         }
@@ -839,7 +840,7 @@ public class MemcachedTemplate {
                 MemcachedStatsItem statsItem = items.get(slabId);
                 if(statsItem == null) statsItem = new MemcachedStatsItem(slabId);
 
-                MemcachedUtils.setFieldValue(field, item.getValue(), statsItem);
+                setFieldValue(field, item.getValue(), statsItem);
 
                 items.put(slabId, statsItem);
             }
@@ -870,7 +871,7 @@ public class MemcachedTemplate {
                 String key = item.getKey();
 
                 if(!key.contains(":")) {
-                    MemcachedUtils.setFieldValue(key, item.getValue(), slabs);
+                    setFieldValue(key, item.getValue(), slabs);
                     continue;
                 }
 
@@ -881,7 +882,7 @@ public class MemcachedTemplate {
                 MemcachedStatsSlab statsItem = items.get(slabId);
                 if(statsItem == null) statsItem = new MemcachedStatsSlab(slabId);
 
-                MemcachedUtils.setFieldValue(field, item.getValue(), statsItem);
+                setFieldValue(field, item.getValue(), statsItem);
 
                 items.put(slabId, statsItem);
             }
@@ -1116,4 +1117,14 @@ public class MemcachedTemplate {
     //     if(client == null) return false;
     //     return client.syncAll(var1);
     // }
+
+    private void setFieldValue(String field, String value, Object clazz) {
+        try {
+            String setMethodName = "set" + Character.toUpperCase(field.charAt(0)) + field.substring(1);
+            Method setMethod = clazz.getClass().getMethod(setMethodName, String.class);
+            setMethod.invoke(clazz, value.replace("\r\n", ""));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }

@@ -1,11 +1,8 @@
 package com.lizhibao.toolbox.memcached.model;
 
-import com.lizhibao.toolbox.memcached.MemcachedUtils;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.Map;
 
 /**
  * @author lizhibao

@@ -31,7 +31,9 @@ public class MemcachedManager {
     }
 
     private void init() {
-        if (properties.getNodes() == null) return;
+        if (properties.getNodes() == null || properties.getNodes().isEmpty()) {
+            throw new RuntimeException("Please configure the cache connection address");
+        }
 
         for (MemcachedConfig node : properties.getNodes()) {
             if(!StringUtils.hasText(node.getName())) node.setName(node.getServers());
