@@ -2,6 +2,7 @@ package com.lizhibao.toolbox.memcached;
 
 import com.danga.MemCached.MemCachedClient;
 import com.danga.MemCached.SockIOPool;
+import com.lizhibao.toolbox.memcached.model.MyMemCachedClient;
 import com.schooner.MemCached.TransCoder;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +24,7 @@ public class MemcachedManager {
     private final MemcachedProperties properties;
 
     @Getter
-    private final Map<String, MemCachedClient> clients = new HashMap<>();
+    private final Map<String, MyMemCachedClient> clients = new HashMap<>();
 
     public MemcachedManager(MemcachedProperties properties) {
         this.properties = properties;
@@ -80,25 +81,25 @@ public class MemcachedManager {
             pool.setHashingAlg(node.getHashingAlg());
             pool.initialize();
 
-            MemCachedClient client = getMemCachedClient(node);
+            MyMemCachedClient client = getMemCachedClient(node);
             if(client != null) clients.put(node.getName(), client);
         }
     }
 
-    private static MemCachedClient getMemCachedClient(MemcachedConfig node) {
+    private static MyMemCachedClient getMemCachedClient(MemcachedConfig config) {
         try {
-            MemCachedClient client = new MemCachedClient(node.getName());
-            if(node.getEnableKeyStrictMode() != null) client.setSanitizeKeys(node.getEnableKeyStrictMode());
-            if(node.getIsPrimitiveAsString() != null) client.setPrimitiveAsString(node.getIsPrimitiveAsString());
-            if(StringUtils.hasText(node.getDefaultEncoding())) client.setDefaultEncoding(node.getDefaultEncoding());
-            if(StringUtils.hasText(node.getTransCoderClass())) {
-                Class<?> clazz = Class.forName(node.getTransCoderClass());
+            MemCachedClient client = new MemCachedClient(config.getName());
+            if(config.getEnableKeyStrictMode() != null) client.setSanitizeKeys(config.getEnableKeyStrictMode());
+            if(config.getIsPrimitiveAsString() != null) client.setPrimitiveAsString(config.getIsPrimitiveAsString());
+            if(StringUtils.hasText(config.getDefaultEncoding())) client.setDefaultEncoding(config.getDefaultEncoding());
+            if(StringUtils.hasText(config.getTransCoderClass())) {
+                Class<?> clazz = Class.forName(config.getTransCoderClass());
                 if(TransCoder.class.isAssignableFrom(clazz)) {
                     TransCoder transCoder = (TransCoder) clazz.getDeclaredConstructor().newInstance();
                     client.setTransCoder(transCoder);
                 }
             }
-            return client;
+            return new MyMemCachedClient(config, client);
         } catch (Exception e) {
             log.error("", e);
         }

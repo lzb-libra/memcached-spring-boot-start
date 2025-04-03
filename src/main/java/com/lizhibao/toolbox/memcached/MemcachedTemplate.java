@@ -18,7 +18,7 @@ import java.util.*;
 @Component
 public class MemcachedTemplate {
     private final String defaultName;
-    private final Map<String, MemCachedClient> clients;
+    private final Map<String, MyMemCachedClient> clients;
 
     public MemcachedTemplate(MemcachedManager manager) {
         this.clients = manager.getClients();
@@ -29,7 +29,7 @@ public class MemcachedTemplate {
      * 获取原始缓存客户端
      * @return MemCachedClient
      */
-    public MemCachedClient getClient() {
+    public Optional<MemCachedClient> getClient() {
         return this.getClient(this.defaultName);
     }
 
@@ -38,9 +38,30 @@ public class MemcachedTemplate {
      * @param name 缓存名称
      * @return MemCachedClient
      */
-    public MemCachedClient getClient(String name) {
+    public Optional<MemCachedClient> getClient(String name) {
         if(log.isDebugEnabled()) log.debug("{}", name);
-        return clients.get(name);
+
+        if(clients == null || clients.isEmpty()) return Optional.empty();
+
+        MyMemCachedClient client = clients.get(name);
+        return client == null ? Optional.empty() : Optional.ofNullable(client.getClient());
+    }
+
+    public Optional<MemcachedConfig> getConfig() {
+        return this.getConfig(this.defaultName);
+    }
+
+    public Optional<MemcachedConfig> getConfig(String name) {
+        if(log.isDebugEnabled()) log.debug("{}", name);
+
+        if(clients == null || clients.isEmpty()) return Optional.empty();
+        MyMemCachedClient client = clients.get(name);
+        return client == null ? Optional.empty() : Optional.ofNullable(client.getConfig());
+    }
+
+    public Set<String> getAllClientNames() {
+        if(clients == null || clients.isEmpty()) return new HashSet<>();
+        return clients.keySet();
     }
 
     /**
@@ -60,7 +81,13 @@ public class MemcachedTemplate {
      */
     public boolean keyExists(String name, String key) {
         if(log.isDebugEnabled()) log.debug("{} => {}", name, key);
-        MemCachedClient client = clients.get(name);
+
+        if(clients == null || clients.isEmpty()) return false;
+
+        MyMemCachedClient cachedClient = clients.get(name);
+        if(cachedClient == null) return false;
+
+        MemCachedClient client = cachedClient.getClient();
         return client != null && client.keyExists(key);
     }
 
@@ -81,7 +108,13 @@ public class MemcachedTemplate {
      */
     public boolean delete(String name, String key) {
         if(log.isDebugEnabled()) log.debug("{} => {}", name, key);
-        MemCachedClient client = clients.get(name);
+
+        if(clients == null || clients.isEmpty()) return false;
+
+        MyMemCachedClient cachedClient = clients.get(name);
+        if(cachedClient == null) return false;
+
+        MemCachedClient client = cachedClient.getClient();
         return client != null && client.delete(key);
     }
 
@@ -127,7 +160,13 @@ public class MemcachedTemplate {
      */
     public boolean set(String name, String key, Object value, long expired) {
         if(log.isDebugEnabled()) log.debug("{} => {} / {} / {}", name, key, value, expired);
-        MemCachedClient client = clients.get(name);
+
+        if(clients == null || clients.isEmpty()) return false;
+
+        MyMemCachedClient cachedClient = clients.get(name);
+        if(cachedClient == null) return false;
+
+        MemCachedClient client = cachedClient.getClient();
         return client != null && client.set(key, value, new Date(expired));
     }
 
@@ -173,7 +212,13 @@ public class MemcachedTemplate {
      */
     public boolean add(String name, String key, Object value, long expired) {
         if(log.isDebugEnabled()) log.debug("{} => {} / {} / {}", name, key, value, expired);
-        MemCachedClient client = clients.get(name);
+
+        if(clients == null || clients.isEmpty()) return false;
+
+        MyMemCachedClient cachedClient = clients.get(name);
+        if(cachedClient == null) return false;
+
+        MemCachedClient client = cachedClient.getClient();
         return client != null && client.add(key, value, new Date(expired));
     }
 
@@ -219,7 +264,13 @@ public class MemcachedTemplate {
      */
     public boolean replace(String name, String key, Object value, long expired) {
         if(log.isDebugEnabled()) log.debug("{} => {} / {} / {}", name, key, value, expired);
-        MemCachedClient client = clients.get(name);
+
+        if(clients == null || clients.isEmpty()) return false;
+
+        MyMemCachedClient cachedClient = clients.get(name);
+        if(cachedClient == null) return false;
+
+        MemCachedClient client = cachedClient.getClient();
         return client != null && client.replace(key, value, new Date(expired));
     }
 
@@ -242,7 +293,13 @@ public class MemcachedTemplate {
      */
     public boolean append(String name, String key, Object value) {
         if(log.isDebugEnabled()) log.debug("{} => {} / {}", name, key, value);
-        MemCachedClient client = clients.get(name);
+
+        if(clients == null || clients.isEmpty()) return false;
+
+        MyMemCachedClient cachedClient = clients.get(name);
+        if(cachedClient == null) return false;
+
+        MemCachedClient client = cachedClient.getClient();
         return client != null && client.append(key, value);
     }
 
@@ -265,7 +322,13 @@ public class MemcachedTemplate {
      */
     public boolean prepend(String name, String key, Object value) {
         if(log.isDebugEnabled()) log.debug("{} => {} / {}", name, key, value);
-        MemCachedClient client = clients.get(name);
+
+        if(clients == null || clients.isEmpty()) return false;
+
+        MyMemCachedClient cachedClient = clients.get(name);
+        if(cachedClient == null) return false;
+
+        MemCachedClient client = cachedClient.getClient();
         return client != null && client.prepend(key, value);
     }
 
@@ -311,7 +374,13 @@ public class MemcachedTemplate {
      */
     public boolean storeCounter(String name, String key, Long value, long expired) {
         if(log.isDebugEnabled()) log.debug("{} => {} / {} / {}", name, key, value, expired);
-        MemCachedClient client = clients.get(name);
+
+        if(clients == null || clients.isEmpty()) return false;
+
+        MyMemCachedClient cachedClient = clients.get(name);
+        if(cachedClient == null) return false;
+
+        MemCachedClient client = cachedClient.getClient();
         return client != null && client.storeCounter(key, value, new Date(expired));
     }
 
@@ -332,8 +401,15 @@ public class MemcachedTemplate {
      */
     public long getCounter(String name, String key) {
         if(log.isDebugEnabled()) log.debug("{} => {}", name, key);
-        MemCachedClient client = clients.get(name);
+
+        if(clients == null || clients.isEmpty()) return -1L;
+
+        MyMemCachedClient cachedClient = clients.get(name);
+        if(cachedClient == null) return -1L;
+
+        MemCachedClient client = cachedClient.getClient();
         if(client == null) return -1L;
+
         return client.getCounter(key);
     }
 
@@ -375,8 +451,15 @@ public class MemcachedTemplate {
      */
     public long addOrIncr(String name, String key, long incr) {
         if(log.isDebugEnabled()) log.debug("{} => {} / {}", name, key, incr);
-        MemCachedClient client = clients.get(name);
+
+        if(clients == null || clients.isEmpty()) return -1L;
+
+        MyMemCachedClient cachedClient = clients.get(name);
+        if(cachedClient == null) return -1L;
+
+        MemCachedClient client = cachedClient.getClient();
         if(client == null) return -1L;
+
         return client.addOrIncr(key, incr);
     }
 
@@ -418,8 +501,15 @@ public class MemcachedTemplate {
      */
     public long addOrDecr(String name, String key, long decr) {
         if(log.isDebugEnabled()) log.debug("{} => {} / {}", name, key, decr);
-        MemCachedClient client = clients.get(name);
+
+        if(clients == null || clients.isEmpty()) return -1L;
+
+        MyMemCachedClient cachedClient = clients.get(name);
+        if(cachedClient == null) return -1L;
+
+        MemCachedClient client = cachedClient.getClient();
         if(client == null) return -1L;
+
         return client.addOrDecr(key, decr);
     }
 
@@ -440,8 +530,15 @@ public class MemcachedTemplate {
      */
     public long incr(String name, String key) {
         if(log.isDebugEnabled()) log.debug("{} => {}", name, key);
-        MemCachedClient client = clients.get(name);
+
+        if(clients == null || clients.isEmpty()) return -1L;
+
+        MyMemCachedClient cachedClient = clients.get(name);
+        if(cachedClient == null) return -1L;
+
+        MemCachedClient client = cachedClient.getClient();
         if(client == null) return -1L;
+
         return client.incr(key);
     }
 
@@ -464,8 +561,15 @@ public class MemcachedTemplate {
      */
     public long incr(String name, String key, long value) {
         if(log.isDebugEnabled()) log.debug("{} => {} / {}", name, key, value);
-        MemCachedClient client = clients.get(name);
+
+        if(clients == null || clients.isEmpty()) return -1L;
+
+        MyMemCachedClient cachedClient = clients.get(name);
+        if(cachedClient == null) return -1L;
+
+        MemCachedClient client = cachedClient.getClient();
         if(client == null) return -1L;
+
         return client.incr(key, value);
     }
 
@@ -486,8 +590,15 @@ public class MemcachedTemplate {
      */
     public long decr(String name, String key) {
         if(log.isDebugEnabled()) log.debug("{} => {}", name, key);
-        MemCachedClient client = clients.get(name);
+
+        if(clients == null || clients.isEmpty()) return -1L;
+
+        MyMemCachedClient cachedClient = clients.get(name);
+        if(cachedClient == null) return -1L;
+
+        MemCachedClient client = cachedClient.getClient();
         if(client == null) return -1L;
+
         return client.decr(key);
     }
 
@@ -510,8 +621,15 @@ public class MemcachedTemplate {
      */
     public long decr(String name, String key, long value) {
         if(log.isDebugEnabled()) log.debug("{} => {} / {}", name, key, value);
-        MemCachedClient client = clients.get(name);
+
+        if(clients == null || clients.isEmpty()) return -1L;
+
+        MyMemCachedClient cachedClient = clients.get(name);
+        if(cachedClient == null) return -1L;
+
+        MemCachedClient client = cachedClient.getClient();
         if(client == null) return -1L;
+
         return client.decr(key, value);
     }
 
@@ -520,7 +638,7 @@ public class MemcachedTemplate {
      * @param key 缓存key
      * @return Object
      */
-    public Object get(String key) {
+    public Optional<Object> get(String key) {
         return this.get(this.defaultName, key);
     }
 
@@ -530,11 +648,18 @@ public class MemcachedTemplate {
      * @param key 缓存key
      * @return Object
      */
-    public Object get(String name, String key) {
+    public Optional<Object> get(String name, String key) {
         if(log.isDebugEnabled()) log.debug("{} => {}", name, key);
-        MemCachedClient client = clients.get(name);
-        if(client == null) return null;
-        return client.get(key);
+
+        if(clients == null || clients.isEmpty()) return Optional.empty();
+
+        MyMemCachedClient cachedClient = clients.get(name);
+        if(cachedClient == null) return Optional.empty();
+
+        MemCachedClient client = cachedClient.getClient();
+        if(client == null) return Optional.empty();
+
+        return Optional.ofNullable(client.get(key));
     }
 
     /**
@@ -542,7 +667,7 @@ public class MemcachedTemplate {
      * @param key 缓存key
      * @return MemcachedItem
      */
-    public MemcachedItem gets(String key) {
+    public Optional<MemcachedItem> gets(String key) {
         return this.gets(this.defaultName, key);
     }
 
@@ -552,11 +677,18 @@ public class MemcachedTemplate {
      * @param key 缓存key
      * @return MemcachedItem
      */
-    public MemcachedItem gets(String name, String key) {
+    public Optional<MemcachedItem> gets(String name, String key) {
         if(log.isDebugEnabled()) log.debug("{} => {}", name, key);
-        MemCachedClient client = clients.get(name);
-        if(client == null) return null;
-        return client.gets(key);
+
+        if(clients == null || clients.isEmpty()) return Optional.empty();
+
+        MyMemCachedClient cachedClient = clients.get(name);
+        if(cachedClient == null) return Optional.empty();
+
+        MemCachedClient client = cachedClient.getClient();
+        if(client == null) return Optional.empty();
+
+        return Optional.ofNullable(client.gets(key));
     }
 
     /**
@@ -580,7 +712,13 @@ public class MemcachedTemplate {
      */
     public boolean cas(String name, String key, Object value, long casUnique) {
         if(log.isDebugEnabled()) log.debug("{} => {} / {} / {}", name, key, value, casUnique);
-        MemCachedClient client = clients.get(name);
+
+        if(clients == null || clients.isEmpty()) return false;
+
+        MyMemCachedClient cachedClient = clients.get(name);
+        if(cachedClient == null) return false;
+
+        MemCachedClient client = cachedClient.getClient();
         return client != null && client.cas(key, value, casUnique);
     }
 
@@ -607,7 +745,13 @@ public class MemcachedTemplate {
      */
     public boolean cas(String name, String key, Object value, long expired, long casUnique) {
         if(log.isDebugEnabled()) log.debug("{} => {} / {} / {} / {}", name, key, value, expired, casUnique);
-        MemCachedClient client = clients.get(name);
+
+        if(clients == null || clients.isEmpty()) return false;
+
+        MyMemCachedClient cachedClient = clients.get(name);
+        if(cachedClient == null) return false;
+
+        MemCachedClient client = cachedClient.getClient();
         return client != null && client.cas(key, value, new Date(expired), casUnique);
     }
 
@@ -616,7 +760,7 @@ public class MemcachedTemplate {
      * @param keys 缓存keys
      * @return Object[]
      */
-    public Object[] getMultiArray(String[] keys) {
+    public Optional<Object[]> getMultiArray(String[] keys) {
         return this.getMultiArray(this.defaultName, keys);
     }
 
@@ -626,11 +770,18 @@ public class MemcachedTemplate {
      * @param keys 缓存keys
      * @return Object[]
      */
-    public Object[] getMultiArray(String name, String[] keys) {
+    public Optional<Object[]> getMultiArray(String name, String[] keys) {
         if(log.isDebugEnabled()) log.debug("{} => {}", name, Arrays.toString(keys));
-        MemCachedClient client = clients.get(name);
-        if(client == null) return null;
-        return client.getMultiArray(keys);
+
+        if(clients == null || clients.isEmpty()) return Optional.empty();
+
+        MyMemCachedClient cachedClient = clients.get(name);
+        if(cachedClient == null) return Optional.empty();
+
+        MemCachedClient client = cachedClient.getClient();
+        if(client == null) return Optional.empty();
+
+        return Optional.ofNullable(client.getMultiArray(keys));
     }
 
     /**
@@ -638,7 +789,7 @@ public class MemcachedTemplate {
      * @param keys 缓存keys
      * @return Map<String, Object>
      */
-    public Map<String, Object> getMulti(String[] keys) {
+    public Optional<Map<String, Object>> getMulti(String[] keys) {
         return this.getMulti(this.defaultName, keys);
     }
 
@@ -648,15 +799,22 @@ public class MemcachedTemplate {
      * @param keys 缓存keys
      * @return Map<String, Object>
      */
-    public Map<String, Object> getMulti(String name, String[] keys) {
+    public Optional<Map<String, Object>> getMulti(String name, String[] keys) {
         if(log.isDebugEnabled()) log.debug("{} => {}", name, Arrays.toString(keys));
-        MemCachedClient client = clients.get(name);
-        if(client == null) return null;
-        return client.getMulti(keys);
+
+        if(clients == null || clients.isEmpty()) return Optional.empty();
+
+        MyMemCachedClient cachedClient = clients.get(name);
+        if(cachedClient == null) return Optional.empty();
+
+        MemCachedClient client = cachedClient.getClient();
+        if(client == null) return Optional.empty();
+
+        return Optional.ofNullable(client.getMulti(keys));
     }
 
     /**
-     * 清理缓存中的所有键值对
+     * 危险操作 — 清理缓存中的所有键值对
      * @return true / false
      */
     public boolean flushAll() {
@@ -664,13 +822,19 @@ public class MemcachedTemplate {
     }
 
     /**
-     * 清理缓存中的所有键值对
+     * 危险操作 — 清理缓存中的所有键值对
      * @param name 缓存名称
      * @return true / false
      */
     public boolean flushAll(String name) {
         if(log.isDebugEnabled()) log.debug("{}", name);
-        MemCachedClient client = clients.get(name);
+
+        if(clients == null || clients.isEmpty()) return false;
+
+        MyMemCachedClient cachedClient = clients.get(name);
+        if(cachedClient == null) return false;
+
+        MemCachedClient client = cachedClient.getClient();
         return client != null && client.flushAll();
     }
 
@@ -678,7 +842,7 @@ public class MemcachedTemplate {
      * 获取统计信息
      * @return Map<String, Map<String, String>>
      */
-    public Map<String, Map<String, String>> stats() {
+    public Optional<Map<String, Map<String, String>>> stats() {
         return this.stats(this.defaultName);
     }
 
@@ -687,18 +851,25 @@ public class MemcachedTemplate {
      * @param name 缓存名称
      * @return Map<String, Map<String, String>>
      */
-    public Map<String, Map<String, String>> stats(String name) {
+    public Optional<Map<String, Map<String, String>>> stats(String name) {
         if(log.isDebugEnabled()) log.debug("{}", name);
-        MemCachedClient client = clients.get(name);
-        if(client == null) return new HashMap<>();
-        return client.stats();
+
+        if(clients == null || clients.isEmpty()) return Optional.empty();
+
+        MyMemCachedClient cachedClient = clients.get(name);
+        if(cachedClient == null) return Optional.empty();
+
+        MemCachedClient client = cachedClient.getClient();
+        if(client == null) return Optional.empty();
+
+        return Optional.ofNullable(client.stats());
     }
 
     /**
      * 获取各个 slab 中 item 的数目和存储时长(最后一次访问距离现在的秒数)
      * @return Map<String, Map<String, String>>
      */
-    public Map<String, Map<String, String>> statsItems() {
+    public Optional<Map<String, Map<String, String>>> statsItems() {
         return this.statsItems(this.defaultName);
     }
 
@@ -707,18 +878,25 @@ public class MemcachedTemplate {
      * @param name 缓存名称
      * @return Map<String, Map<String, String>>
      */
-    public Map<String, Map<String, String>> statsItems(String name) {
+    public Optional<Map<String, Map<String, String>>> statsItems(String name) {
         if(log.isDebugEnabled()) log.debug("{}", name);
-        MemCachedClient client = clients.get(name);
-        if(client == null) return new HashMap<>();
-        return client.statsItems();
+
+        if(clients == null || clients.isEmpty()) return Optional.empty();
+
+        MyMemCachedClient cachedClient = clients.get(name);
+        if(cachedClient == null) return Optional.empty();
+
+        MemCachedClient client = cachedClient.getClient();
+        if(client == null) return Optional.empty();
+
+        return Optional.ofNullable(client.statsItems());
     }
 
     /**
      * 获取各个slab的信息，包括chunk的大小、数目、使用情况等
      * @return Map<String, Map<String, String>>
      */
-    public Map<String, Map<String, String>> statsSlabs() {
+    public Optional<Map<String, Map<String, String>>> statsSlabs() {
         return this.statsSlabs(this.defaultName);
     }
 
@@ -727,11 +905,18 @@ public class MemcachedTemplate {
      * @param name 缓存名称
      * @return Map<String, Map<String, String>>
      */
-    public Map<String, Map<String, String>> statsSlabs(String name) {
+    public Optional<Map<String, Map<String, String>>> statsSlabs(String name) {
         if(log.isDebugEnabled()) log.debug("{}", name);
-        MemCachedClient client = clients.get(name);
-        if(client == null) return new HashMap<>();
-        return client.statsSlabs();
+
+        if(clients == null || clients.isEmpty()) return Optional.empty();
+
+        MyMemCachedClient cachedClient = clients.get(name);
+        if(cachedClient == null) return Optional.empty();
+
+        MemCachedClient client = cachedClient.getClient();
+        if(client == null) return Optional.empty();
+
+        return Optional.ofNullable(client.statsSlabs());
     }
 
     /**
@@ -740,7 +925,7 @@ public class MemcachedTemplate {
      * @param limit 返回数据的数量
      * @return Map<String, Map<String, String>>
      */
-    public Map<String, Map<String, String>> statsCacheDump(int slabId, int limit) {
+    public Optional<Map<String, Map<String, String>>> statsCacheDump(int slabId, int limit) {
         return this.statsCacheDump(this.defaultName, slabId, limit);
     }
 
@@ -751,11 +936,18 @@ public class MemcachedTemplate {
      * @param limit 返回数据的数量
      * @return Map<String, Map<String, String>>
      */
-    public Map<String, Map<String, String>> statsCacheDump(String name, int slabId, int limit) {
+    public Optional<Map<String, Map<String, String>>> statsCacheDump(String name, int slabId, int limit) {
         if(log.isDebugEnabled()) log.debug("{} => {} / {}", name, slabId, limit);
-        MemCachedClient client = clients.get(name);
-        if(client == null) return new HashMap<>();
-        return client.statsCacheDump(slabId, limit);
+
+        if(clients == null || clients.isEmpty()) return Optional.empty();
+
+        MyMemCachedClient cachedClient = clients.get(name);
+        if(cachedClient == null) return Optional.empty();
+
+        MemCachedClient client = cachedClient.getClient();
+        if(client == null) return Optional.empty();
+
+        return Optional.ofNullable(client.statsCacheDump(slabId, limit));
     }
 
     /**
@@ -799,11 +991,12 @@ public class MemcachedTemplate {
      */
     public List<MemcachedStats> statsToModel(String name) {
         if(log.isDebugEnabled()) log.debug("{}", name);
-        Map<String, Map<String, String>> statsInfo = this.stats(name);
-        if(statsInfo.isEmpty()) return new ArrayList<>();
+
+        Optional<Map<String, Map<String, String>>> optional = this.stats(name);
+        if(!optional.isPresent()) return new ArrayList<>();
 
         List<MemcachedStats> results = new ArrayList<>();
-        for (Map.Entry<String, Map<String, String>> entry : statsInfo.entrySet()) {
+        for (Map.Entry<String, Map<String, String>> entry : optional.get().entrySet()) {
             MemcachedStats stats = new MemcachedStats(entry.getKey());
             for (Map.Entry<String, String> item : entry.getValue().entrySet()) {
                 setFieldValue(item.getKey(), item.getValue(), stats);
@@ -821,11 +1014,11 @@ public class MemcachedTemplate {
      */
     public List<MemcachedStatsItems> statsItemsToModel(String name) {
         if(log.isDebugEnabled()) log.debug("{}", name);
-        Map<String, Map<String, String>> statsItemInfo = this.statsItems(name);
-        if(statsItemInfo.isEmpty()) return new ArrayList<>();
+        Optional<Map<String, Map<String, String>>> optional = this.statsItems(name);
+        if(!optional.isPresent()) return new ArrayList<>();
 
         List<MemcachedStatsItems> results = new ArrayList<>();
-        for (Map.Entry<String, Map<String, String>> entry : statsItemInfo.entrySet()) {
+        for (Map.Entry<String, Map<String, String>> entry : optional.get().entrySet()) {
             MemcachedStatsItems status = new MemcachedStatsItems(entry.getKey());
 
             Map<String, MemcachedStatsItem> items = new HashMap<>();
@@ -859,11 +1052,11 @@ public class MemcachedTemplate {
      */
     public List<MemcachedStatsSlabs> statsSlabsToModel(String name) {
         if(log.isDebugEnabled()) log.debug("{}", name);
-        Map<String, Map<String, String>> statsSlabInfo = this.statsSlabs(name);
-        if(statsSlabInfo.isEmpty()) return new ArrayList<>();
+        Optional<Map<String, Map<String, String>>> optional = this.statsSlabs(name);
+        if(!optional.isPresent()) return new ArrayList<>();
 
         List<MemcachedStatsSlabs> results = new ArrayList<>();
-        for (Map.Entry<String, Map<String, String>> entry : statsSlabInfo.entrySet()) {
+        for (Map.Entry<String, Map<String, String>> entry : optional.get().entrySet()) {
             MemcachedStatsSlabs slabs = new MemcachedStatsSlabs(entry.getKey());
 
             Map<String, MemcachedStatsSlab> items = new HashMap<>();
@@ -903,10 +1096,11 @@ public class MemcachedTemplate {
      */
     public List<MemcachedCacheDump> statsSlabsKeyToModel(String name, int slabId, int limit) {
         if(log.isDebugEnabled()) log.debug("{} => {} / {}", name, slabId, limit);
-        Map<String, Map<String, String>> statsCacheDumpInfo = this.statsCacheDump(name, slabId, limit);
+        Optional<Map<String, Map<String, String>>> optional = this.statsCacheDump(name, slabId, limit);
+        if(!optional.isPresent()) return new ArrayList<>();
 
         List<MemcachedCacheDump> result = new ArrayList<>();
-        for (Map.Entry<String, Map<String, String>> entry : statsCacheDumpInfo.entrySet()) {
+        for (Map.Entry<String, Map<String, String>> entry : optional.get().entrySet()) {
             MemcachedCacheDump cacheDump = new MemcachedCacheDump(entry.getKey());
 
             for (Map.Entry<String, String> item : entry.getValue().entrySet()) cacheDump.addKey(item.getKey());
